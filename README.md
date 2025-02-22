@@ -1,4 +1,4 @@
-# 🚀 Automate Docker Image Build and Deployment Using GitHub Actions
+# 🚀 Automate Docker Image Build and Deployment Using GitHub Actions CI/CD pipeline
 
 ![GitHub Actions + Docker](https://img.shields.io/badge/GitHub%20Actions-Docker-blue?logo=githubactions&logoColor=white&style=for-the-badge)
 
