@@ -31,7 +31,7 @@ jobs:
       - name: Get Image ID
         id: image_id
         run: |
-          IMAGE_ID=$(docker images -q ${{ env.IMAGE_NAME }}:latest)
+          IMAGE_ID=$(docker images -a -q )
           echo "$IMAGE_ID"
          # echo "IMAGE_ID=$IMAGE_ID" >> "$GITHUB_ENV"
         #  echo "$GITHUB_ENV"
