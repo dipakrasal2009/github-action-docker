@@ -1,5 +1,11 @@
-FROM alpine:latest
+FROM redhat/ubi8
 
-RUN apk --no-cache add docker
+RUN yum install python3 -y
 
-CMD ["sh"]
+RUN pip3 install flask
+
+WORKDIR /code
+
+COPY app.py app.py
+
+ENTRYPOINT ["python3","app.py"]
