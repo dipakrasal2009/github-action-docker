@@ -37,7 +37,7 @@ jobs:
         #  echo "$GITHUB_ENV"
 
       - name: Run Docker container using Image ID
-        run: docker run -d -p 5000:5000 --name test-container ${{ env.IMAGE_ID }}
+        run: docker run -d -p 5000:5000 --name test-container $IMAGE_ID
 
       - name: Wait for the container to be ready
         run: |
