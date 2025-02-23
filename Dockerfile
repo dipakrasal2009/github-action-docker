@@ -3,7 +3,7 @@ FROM redhat/ubi8
 # Install Python 3 and pip
 RUN yum install python3 -y
 
-# Install Flask and pytest
+# Install Flask
 RUN pip3 install flask 
 
 # Set working directory
