@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: docker.io
-  IMAGE_NAME: dipakrasal2009/github-action-docker
+  #IMAGE_NAME: dipakrasal2009/github-action-docker
 
 jobs:
   build-test-push:
@@ -31,11 +31,11 @@ jobs:
         with:
           context: .
           push: false  # Build only, don’t push yet
-          tags: ${{ env.IMAGE_NAME }}:latest
+          tags: dipakrasal2009/github-action-docker:latest
 
       - name: Run tests inside Docker container
         run: |
-          docker run --rm ${{ env.IMAGE_NAME }}:latest pytest test_app.py
+          docker run --rm dipakrasal2009/github-action-docker:latest pytest test_app.py
 
       - name: Push Docker image
         if: success()  # Push only if tests pass
@@ -43,5 +43,5 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ env.IMAGE_NAME }}:latest
+          tags: dipakrasal2009/github-action-docker:latest
 
