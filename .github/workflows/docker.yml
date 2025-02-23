@@ -1,17 +1,25 @@
-name: Build, Test, and Push Docker Image
+name: Docker
 
 on:
+  schedule:
+    - cron: '35 4 * * *'  # Runs daily at 4:35 AM UTC
   push:
     branches: ["main"]
     tags: ['v*.*.*']
+  pull_request:
+    branches: ["main"]
 
 env:
   REGISTRY: docker.io
-  #IMAGE_NAME: dipakrasal2009/github-action-docker
+  IMAGE_NAME: dipakrasal2009/github-action-docker
 
 jobs:
-  build-test-push:
+  build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
 
     steps:
       - name: Checkout repository
@@ -26,22 +34,19 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build Docker image
-        uses: docker/build-push-action@v5
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          context: .
-          push: false  # Build only, don’t push yet
-          tags: dipakrasal2009/github-action-docker:latest
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Run tests inside Docker container
-        run: |
-          docker run --rm dipakrasal2009/github-action-docker:latest pytest test_app.py
-
-      - name: Push Docker image
-        if: success()  # Push only if tests pass
+      - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: dipakrasal2009/github-action-docker:latest
+          tags: ${{ env.IMAGE_NAME }}:latest
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
