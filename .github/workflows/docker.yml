@@ -31,8 +31,11 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: false
+          push: false  # Don't push yet; just build locally for testing
           tags: ${{ env.IMAGE_NAME }}:latest
+
+      - name: Verify Docker image is built
+        run: docker images
 
       - name: Run Docker container
         run: docker run -d -p 5000:5000 --name test-container ${{ env.IMAGE_NAME }}:latest
@@ -41,13 +44,13 @@ jobs:
         run: |
           for i in {1..10}; do
             if curl -s http://localhost:5000 | grep -q "Hello, task completed................"; then
-              echo "App is running and reachable!"
+              echo "✅ App is running and reachable!"
               exit 0
             fi
-            echo "Waiting for the app to be ready..."
+            echo "⏳ Waiting for the app to be ready..."
             sleep 3
           done
-          echo "App did not start in time."
+          echo "❌ App did not start in time."
           docker logs test-container
           exit 1
 
