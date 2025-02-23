@@ -35,10 +35,11 @@ jobs:
           tags: ${{ env.IMAGE_NAME }}:latest
 
       - name: Verify Docker image is built
-        run: docker images
+        run: x=docker images -a -q
 
       - name: Run Docker container
-        run: docker run -d -p 5000:5000 --name test-container ${{ env.IMAGE_NAME }}
+        #run: docker run -d -p 5000:5000 --name test-container ${{ env.IMAGE_NAME }}
+        run: docker run -d -p 5000:5000 --name test-container $x
 
       - name: Wait for the container to be ready
         run: |
