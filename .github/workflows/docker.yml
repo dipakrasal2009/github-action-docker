@@ -33,14 +33,7 @@ jobs:
         run: |
           IMAGE_ID=$(docker images -a -q )
           echo "$IMAGE_ID"
-         # echo "IMAGE_ID=$IMAGE_ID" >> "$GITHUB_ENV"
-        #  echo "$GITHUB_ENV"
-
-      - name: Run Docker container using Image ID
-        run: docker run -d -p 5000:5000 --name test-container $IMAGE_ID
-
-      - name: Wait for the container to be ready
-        run: |
+          docker run -dit -p 5000:5000 --name test-container $IMAGE_ID
           for i in {1..10}; do
             if curl -s http://localhost:5000 | grep -q "Hello, task completed................"; then
               echo "✅ App is running and reachable!"
@@ -52,6 +45,26 @@ jobs:
           echo "❌ App did not start in time."
           docker logs test-container
           exit 1
+
+         # echo "IMAGE_ID=$IMAGE_ID" >> "$GITHUB_ENV"
+        #  echo "$GITHUB_ENV"
+
+      #- name: Run Docker container using Image ID
+       # run: docker run -d -p 5000:5000 --name test-container $IMAGE_ID
+
+      #- name: Wait for the container to be ready
+       # run: |
+        #  for i in {1..10}; do
+         #   if curl -s http://localhost:5000 | grep -q "Hello, task completed................"; then
+          #    echo "✅ App is running and reachable!"
+           #   exit 0
+           # fi
+           # echo "⏳ Waiting for the app to be ready..."
+           # sleep 3
+          #done
+          #echo "❌ App did not start in time."
+          #docker logs test-container
+          #exit 1
 
       - name: Stop and remove container
         run: docker rm -f test-container
