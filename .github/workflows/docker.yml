@@ -32,8 +32,9 @@ jobs:
         id: image_id
         run: |
           IMAGE_ID=$(docker images -q ${{ env.IMAGE_NAME }}:latest)
-          echo "IMAGE_ID=$IMAGE_ID" >> "$GITHUB_ENV"
-          echo "$GITHUB_ENV"
+          echo "$IMAGE_ID"
+         # echo "IMAGE_ID=$IMAGE_ID" >> "$GITHUB_ENV"
+        #  echo "$GITHUB_ENV"
 
       - name: Run Docker container using Image ID
         run: docker run -d -p 5000:5000 --name test-container ${{ env.IMAGE_ID }}
