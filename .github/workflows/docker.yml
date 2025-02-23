@@ -3,14 +3,15 @@ name: Build, Test, and Push Docker Image
 on:
   push:
     branches: ["main"]
-    tags: ['v*.*.*']
+  pull_request:
+    branches: ["main"]
 
 env:
   REGISTRY: docker.io
   IMAGE_NAME: dipakrasal2009/github-action-docker
 
 jobs:
-  build-test-push:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -30,15 +31,31 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: false  # Build only, don’t push yet
+          push: false
           tags: ${{ env.IMAGE_NAME }}:latest
 
-      - name: Run tests inside Docker container
+      - name: Run Docker container
+        run: docker run -d -p 5000:5000 --name test-container ${{ env.IMAGE_NAME }}:latest
+
+      - name: Wait for the container to be ready
         run: |
-          docker run --rm ${{ env.IMAGE_NAME }}:latest pytest test_app.py
+          for i in {1..10}; do
+            if curl -s http://localhost:5000 | grep -q "Hello, task completed................"; then
+              echo "App is running and reachable!"
+              exit 0
+            fi
+            echo "Waiting for the app to be ready..."
+            sleep 3
+          done
+          echo "App did not start in time."
+          docker logs test-container
+          exit 1
+
+      - name: Stop and remove container
+        run: docker rm -f test-container
 
       - name: Push Docker image
-        if: success()  # Push only if tests pass
+        if: success()
         uses: docker/build-push-action@v5
         with:
           context: .
