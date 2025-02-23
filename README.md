@@ -1,68 +1,96 @@
-# 🚀 Automate Docker Image Build and Deployment Using GitHub Actions CI/CD pipeline
+# Automate Docker Image Build and Push Using GitHub Actions 🐳
 
-![GitHub Actions + Docker](https://img.shields.io/badge/GitHub%20Actions-Docker-blue?logo=githubactions&logoColor=white&style=for-the-badge)
+Hey everyone! 👋  
+This README will guide you through automating the process of building and pushing Docker images using **GitHub Actions**. We'll set up a **CI/CD pipeline** that builds a Docker image and pushes it to **Docker Hub**.
 
-This repository demonstrates how to **automate building, pushing, and deploying Docker images** using **GitHub Actions**. The CI/CD pipeline builds a Docker image with Docker-in-Docker (DIND), pushes it to Docker Hub, and runs the container automatically.
-
----
-
-## 📘 **What You’ll Learn**
-✅ Create a Dockerfile and GitHub Actions workflow.  
-✅ Automate Docker image builds and pushes to Docker Hub.  
-✅ Pull and run Docker containers automatically.  
-✅ Securely manage credentials using GitHub Secrets.  
+> 🚀 *This guide is designed to be simple and beginner-friendly!*
 
 ---
 
-## 📝 **Project Structure**
+## 📘 What You'll Learn
+✅ Setting up a GitHub repository with a Dockerfile  
+✅ Creating a GitHub Actions workflow for automated Docker builds  
+✅ Pushing Docker images to Docker Hub  
+
+---
+
+## 📝 Step 1: Create a GitHub Repository
+1. **Create a repository:**
+   - Go to GitHub and create a new repository (e.g., `github-action-docker`).
+   - Add a `README.md` file to describe your project.
+
+2. **Clone the repository:**
+   ```bash
+   git clone https://github.com/your-username/github-action-docker.git
+   cd github-action-docker
+   ```
+   ✅ This allows you to work on the project files from your local machine.
+
+---
+
+## 🐳 Step 2: Write the Dockerfile
+Create a file named `Dockerfile` inside the cloned repository with the following content:
+
+```dockerfile
+FROM redhat/ubi8
+
+RUN yum install python3 -y
+RUN pip3 install flask
+
+WORKDIR /code
+COPY app.py app.py
+
+ENTRYPOINT ["python3", "app.py"]
 ```
-📁 github-action-docker
-├── 📄 Dockerfile
-└── 📂 .github
-    └── 📂 workflows
-        └── 📄 docker.yml
-```
+
+### 📝 Explanation:
+- **FROM redhat/ubi8:** Uses Red Hat Universal Base Image 8 as the base image.
+- **RUN yum install python3 -y:** Installs Python 3.
+- **RUN pip3 install flask:** Installs the Flask web framework.
+- **WORKDIR /code:** Sets the working directory inside the container.
+- **COPY app.py app.py:** Copies `app.py` to the container.
+- **ENTRYPOINT ["python3", "app.py"]:** Runs the Flask application.
+
+✅ This Dockerfile creates a minimal environment to run a Flask app inside a Docker container.
 
 ---
 
-## 🐳 **Dockerfile**
-```Dockerfile
-FROM alpine:latest
-RUN apk --no-cache add docker
-CMD ["sh"]
-```
-✅ *Pulls Alpine Linux and installs Docker inside the container.*
+## 🔧 Step 3: Set Up the GitHub Actions Workflow
+GitHub Actions automates tasks like building and pushing Docker images.
 
----
+1. **Create the workflow directory:**
+   ```bash
+   mkdir -p .github/workflows
+   ```
+   ✅ GitHub looks for workflows in this specific directory.
 
-## 🔧 **GitHub Actions Workflow**
-The `.github/workflows/docker.yml` workflow includes three jobs:
-- **build:** Builds and pushes the Docker image to Docker Hub.
-- **install-image:** Pulls the image after a successful build.
-- **run-image:** Runs the pulled Docker image as a container.
-
-📅 **Triggers:**
-- Push to `main` branch  
-- Pull requests targeting `main`  
-- Version tags (`v*.*.*`)  
-- Scheduled runs (daily at 4:35 AM UTC)  
+2. **Create the workflow file:**  
+Create a file named `.github/workflows/docker.yml` and add the following code:
 
 ```yaml
 name: Docker
 
 on:
+  schedule:
+    - cron: '35 4 * * *'  # Runs daily at 4:35 AM UTC
   push:
     branches: ["main"]
+    tags: ['v*.*.*']
   pull_request:
     branches: ["main"]
-  tags:
-    - 'v*.*.*'
-  schedule:
-    - cron: '35 4 * * *'
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: dipakrasal2009/github-action-docker
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -76,94 +104,67 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: dipakrasal2009/docker-inside-docker-dind:latest
-
-  install-image:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Pull built image
-        run: docker pull dipakrasal2009/docker-inside-docker-dind
-
-  run-image:
-    runs-on: ubuntu-latest
-    needs: install-image
-    steps:
-      - name: Run Docker container
-        run: docker run -dit --name OS1 dipakrasal2009/docker-inside-docker-dind
+          tags: ${{ env.IMAGE_NAME }}:latest
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 ```
 
----
+### 🚀 **When does it run?**
+✅ Daily at **4:35 AM UTC** (scheduled build)  
+✅ On pushes to the **main** branch and version tags (e.g., `v1.0.0`)  
+✅ On **pull requests** targeting `main`  
 
-## 🔑 **GitHub Secrets Configuration**
-To securely authenticate with Docker Hub, add the following secrets in your GitHub repository settings:
-- `DOCKER_HUB_USERNAME`: Your Docker Hub username.  
-- `DOCKER_PASSWORD`: Your Docker Hub access token.  
+### ⚙️ **What does it do?**
+✅ Checks out code  
+✅ Sets up Docker Buildx  
+✅ Logs into Docker Hub (securely using GitHub secrets)  
+✅ Extracts metadata (tags and labels the Docker image)  
+✅ Builds & pushes the Docker image to Docker Hub:
+```
+dipakrasal2009/github-action-docker:latest
+```
 
-✅ *This prevents exposing sensitive information in the workflow.*
-
----
-
-## 🚀 **How to Use**
-1. **Clone this repo:**
-   ```bash
-   git clone https://github.com/your-username/github-action-docker.git
-   cd github-action-docker
-   ```
-2. **Add your secrets** as mentioned above.
-3. **Push your changes:**
-   ```bash
-   git add .
-   git commit -m "Set up Docker GitHub Actions workflow"
-   git push origin main
-   ```
-4. **Check the Actions tab** to see the workflow running.
-5. **Verify the Docker image:**
-   ```bash
-   docker pull dipakrasal2009/docker-inside-docker-dind
-   docker run -dit --name test-container dipakrasal2009/docker-inside-docker-dind
-   docker ps  # Confirm the container is running
-   ```
-
-✅ **Trigger Explanation:**  
-*When you push the workflow to the `main` branch, it will automatically trigger and start the further processes.*
+✅ **Why use it?**
+- Fully automated and secure 🔒  
+- Faster builds with caching ⚡  
+- Consistent and up-to-date Docker images 🔄  
 
 ---
 
-## 📸 **Screenshots**
-> 🖼️ *Add screenshots in the following sections:*  
-> - GitHub repository creation  
-> - Project folder structure  
-> - Dockerfile and workflow file views  
-> - GitHub Secrets configuration  
-> - Running GitHub Actions workflow  
-> - Terminal output with running container  
+## 🔑 Step 4: Configure GitHub Secrets
+Securely log into Docker Hub without exposing credentials:
+
+1. Navigate to your repo: **Settings → Secrets and variables → Actions**
+2. Add the following secrets:
+   - `DOCKER_HUB_USERNAME`: Your Docker Hub username
+   - `DOCKER_PASSWORD`: Your Docker Hub access token
+
+✅ **Secrets keep sensitive data hidden from workflow logs.**
 
 ---
 
-## 🎯 **Final Thoughts**
-✅ Save time with automated builds and deployments.  
-✅ Maintain consistent environments with scheduled runs.  
-✅ Securely manage Docker Hub credentials.  
+## 🚀 Step 5: Push Code and Trigger the Workflow
+Push your code to initiate the CI/CD pipeline:
+
+```bash
+git add .
+git commit -m "Add Dockerfile and GitHub Actions workflow"
+git push origin main
+```
+
+✅ Check the **Actions** tab on GitHub to monitor the pipeline in real-time.
 
 ---
-
-🔗 **Medium Blog:** [Read the full guide here](https://medium.com/@dipakrasal2009/automate-docker-image-build-and-deployment-using-github-actions-f21732d767c2)  
-💬 Feel free to share feedback or raise issues! 🚀  
-
----
-
-## 📝 **Author**
-👤 Dipak Rasal  
-🔗 [LinkedIn](https://www.linkedin.com/in/dipakrasal2009) | 🌐 [Medium](https://medium.com/@dipakrasal2009)  
-
----
-
-⭐ *If you found this helpful, don’t forget to star the repo!* 🌟
-
 
