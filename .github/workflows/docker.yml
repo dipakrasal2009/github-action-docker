@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: docker.io
-  IMAGE_NAME: dipakrasal2009/docker-ci-cd-example
+  IMAGE_NAME: dipakrasal2009/github-action-docker
 
 jobs:
   build-test-push:
