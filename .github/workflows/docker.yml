@@ -34,14 +34,14 @@ jobs:
           push: false  # Don't push yet; just build locally for testing
           tags: ${{ env.IMAGE_NAME }}:latest
 
-      -- name: Get Image ID
+      - name: Get Image ID
 	 id: image_id
 	 run: |
 	    IMAGE_ID=$(docker images -q ${{ env.IMAGE_NAME }}:latest)
 	    echo "Image ID: $IMAGE_ID"
 	    echo "IMAGE_ID=$IMAGE_ID" >> "$GITHUB_ENV"
 
-      -- name: Run Docker container using Image ID
+      - name: Run Docker container using Image ID
 	 run: docker run -d -p 5000:5000 --name test-container ${{ env.IMAGE_ID }}
 
       - name: Wait for the container to be ready
