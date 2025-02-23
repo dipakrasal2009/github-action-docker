@@ -38,7 +38,7 @@ jobs:
         run: docker images
 
       - name: Run Docker container
-        run: docker run -d -p 5000:5000 --name test-container ${{ env.IMAGE_NAME }}:latest
+        run: docker run -d -p 5000:5000 --name test-container ${{ env.IMAGE_NAME }}
 
       - name: Wait for the container to be ready
         run: |
