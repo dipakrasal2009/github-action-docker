@@ -34,7 +34,7 @@ jobs:
           push: false  # Don't push yet; just build locally for testing
           tags: ${{ env.IMAGE_NAME }}:latest
 
-      - name: Get Image ID
+      - name: Get Image ID OK
 	 id: image_id
 	 run: |
 	    IMAGE_ID=$(docker images -q ${{ env.IMAGE_NAME }}:latest)
