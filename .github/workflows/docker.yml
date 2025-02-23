@@ -3,16 +3,16 @@ name: Build, Test, and Push Docker Image
 on:
   push:
     branches: ["main"]
-  pull_request:
-    branches: ["main"]
+    tags: ['v*.*.*']
 
 env:
   REGISTRY: docker.io
-  IMAGE_NAME: dipakrasal2009/custom-docker-image
+  IMAGE_NAME: dipakrasal2009/github-action-docker
 
 jobs:
   build-test-push:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,36 +26,19 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build Docker image with a custom name
-        id: build
+      - name: Build Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: false
+          push: false  # Build only, don’t push yet
           tags: ${{ env.IMAGE_NAME }}:latest
 
-      - name: Run Docker container using the built image
-        run: docker run -dit -p 5000:5000 --name test-container ${{ env.IMAGE_NAME }}:latest
-
-      - name: Wait for the app to be ready and test
+      - name: Run tests inside Docker container
         run: |
-          for i in {1..10}; do
-            if curl -s http://localhost:5000 | grep -q "Hello, task completed................"; then
-              echo "✅ App is running and reachable!"
-              exit 0
-            fi
-            echo "⏳ Waiting for the app to be ready..."
-            sleep 3
-          done
-          echo "❌ App did not start in time."
-          docker logs test-container
-          exit 1
+          docker run --rm ${{ env.IMAGE_NAME }}:latest pytest test_app.py
 
-      - name: Stop and remove container
-        run: docker rm -f test-container
-
-      - name: Push Docker image to Docker Hub
-        if: success()
+      - name: Push Docker image
+        if: success()  # Push only if tests pass
         uses: docker/build-push-action@v5
         with:
           context: .
